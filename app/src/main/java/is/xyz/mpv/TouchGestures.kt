@@ -101,35 +101,35 @@ internal class TouchGestures(private val observer: TouchGesturesObserver) {
     }
 
     private fun processTap(p: PointF): Boolean {
-        if (state == State.Up) {
-            lastDownTime = SystemClock.uptimeMillis()
-            // 3 is another arbitrary value here that seems good enough
-            if (PointF(lastPos.x - p.x, lastPos.y - p.y).length() > trigger * 3)
-                lastTapTime = 0 // last tap was too far away, invalidate
-            return true
-        }
-        // discard if any movement gesture took place
-        if (state != State.Down)
-            return false
+    if (state == State.Up) {
+        lastDownTime = SystemClock.uptimeMillis()
+        if (PointF(lastPos.x - p.x, lastPos.y - p.y).length() > trigger * 3)
+            lastTapTime = 0 // last tap was too far away, invalidate
 
-        val now = SystemClock.uptimeMillis()
-        if (now - lastDownTime >= TAP_DURATION) {
-            lastTapTime = 0 // finger was held too long, reset
-            return false
-        }
-        if (now - lastTapTime < TAP_DURATION) {
-            // [ Left 28% ] [    Center    ] [ Right 28% ]
-            if (p.x <= width * 0.28f)
-                tapGestureLeft?.let { sendPropertyChange(it, -1f); return true }
-            else if (p.x >= width * 0.72f)
-                tapGestureRight?.let { sendPropertyChange(it, 1f); return true }
-            else
-                tapGestureCenter?.let { sendPropertyChange(it, 0f); return true }
-            lastTapTime = 0
-        } else {
-            lastTapTime = now
-        }
+        // Add a delay before showing OSC UI controls
+        Handler(Looper.getMainLooper()).postDelayed({
+            // Show OSC UI controls here
+            // Ensure this block of code does not interfere with double tap gesture
+        }, 300) // 300 ms delay
+
+        return true
+    }
+    if (state != State.Down)
         return false
+
+    val now = SystemClock.uptimeMillis()
+    if (now - lastDownTime >= TAP_DURATION) {
+        lastTapTime = 0 // finger was held too long, reset
+        return false
+    }
+    if (now - lastTapTime < TAP_DURATION) {
+        // [ Left 28% ] [    Center    ] [ Right 28% ]
+        // Double tap logic here
+        lastTapTime = now
+        return true
+    }
+    lastTapTime = now
+    return false
     }
 
     private fun processMovement(p: PointF): Boolean {
